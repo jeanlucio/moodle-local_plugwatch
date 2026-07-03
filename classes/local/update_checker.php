@@ -201,7 +201,8 @@ class update_checker {
         // Use standard capability checks just in case (cron executes as CLI).
         $subject = get_string('notification_subject', 'local_plugwatch', $a);
         // Render the mustache template for HTML body.
-        $renderer = $PAGE->get_renderer('local_plugwatch');
+        global $OUTPUT;
+
         // We simulate the template data.
         $templatedata = [
             'name' => $pluginname,
@@ -214,11 +215,7 @@ class update_checker {
         // For simplicity and fallback, we generate a text body too.
         $fullmessage = get_string('notification_body', 'local_plugwatch', $a);
 
-        // We haven't created the mustache template yet, so for Phase 2 we will just
-        // We haven't created the mustache template yet, so for Phase 2 we will just
-        // use the plain string but wrapped in nl2br for html.
-        // Once renderer and template are done, this can be updated.
-        $fullmessagehtml = nl2br(s($fullmessage));
+        $fullmessagehtml = $OUTPUT->render_from_template('local_plugwatch/notification_message', $templatedata);
 
         $message = new \core\message\message();
         $message->component         = 'local_plugwatch';
