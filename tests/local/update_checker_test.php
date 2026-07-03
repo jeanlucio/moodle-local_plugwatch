@@ -137,6 +137,9 @@ final class update_checker_test extends advanced_testcase {
         global $DB;
 
         $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('local/plugwatch:use', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        role_assign($roleid, $user->id, \context_system::instance()->id);
         $component = 'block_xp';
         $baseline = 1700000000;
 
@@ -166,6 +169,9 @@ final class update_checker_test extends advanced_testcase {
         global $DB;
 
         $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('local/plugwatch:use', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        role_assign($roleid, $user->id, \context_system::instance()->id);
         $component = 'block_xp';
         $baseline = 1700000000;
         $newrelease = 1700000999;
@@ -197,6 +203,9 @@ final class update_checker_test extends advanced_testcase {
      */
     public function test_frequency_skips_notification_if_notified_recently(): void {
         $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('local/plugwatch:use', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        role_assign($roleid, $user->id, \context_system::instance()->id);
         $component = 'block_xp';
         $baseline = 1700000000;
         $newrelease = 1700000999;
@@ -227,6 +236,9 @@ final class update_checker_test extends advanced_testcase {
      */
     public function test_plugin_missing_from_api_is_skipped_silently(): void {
         $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('local/plugwatch:use', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        role_assign($roleid, $user->id, \context_system::instance()->id);
         plugwatch_generator::create_watch_item($user->id, 'block_xp', 1700000000, 'v2.5.1');
 
         // Inject a pluglist that does not contain block_xp.
@@ -247,6 +259,9 @@ final class update_checker_test extends advanced_testcase {
      */
     public function test_disabled_plugin_skips_all_processing(): void {
         $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('local/plugwatch:use', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        role_assign($roleid, $user->id, \context_system::instance()->id);
         plugwatch_generator::create_watch_item($user->id, 'block_xp', 1700000000, 'v2.5.1');
 
         set_config('enabled', 0, 'local_plugwatch');
