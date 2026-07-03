@@ -29,6 +29,15 @@ $string['capability_use'] = 'Use Plugin Monitor';
 $string['capability_use_help'] = 'Allows the user to manage a personal list of Moodle plugins to monitor and receive update notifications in their own language.';
 $string['errorlimitreached'] = 'You have reached the maximum of {$a} watched plugins.';
 $string['errorpluginnotfound'] = 'Plugin not found in the Plugin Directory.';
+$string['messageprovider_plugin_updated'] = 'Plugin update available';
+$string['noaisummary'] = 'No AI summary available.';
+$string['notification_body'] = 'A new version of {$a->name} ({$a->component}) is available: {$a->release}.
+
+{$a->summary}
+
+View in Plugin Directory: {$a->link}';
+$string['notification_subject'] = 'Plugin update: {$a->name} {$a->release}';
 $string['pluginname'] = 'Plugin Monitor';
 $string['privacy_items_purpose'] = 'Stores the list of plugins the user chose to monitor.';
 $string['privacy_state_purpose'] = 'Stores the last known version and notification timestamp for each watched plugin.';
+$string['task_check_updates'] = 'Check plugin updates';
