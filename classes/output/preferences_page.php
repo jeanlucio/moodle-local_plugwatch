@@ -67,7 +67,7 @@ class preferences_page implements renderable, templatable {
     public function export_for_template(renderer_base $output): array {
         global $CFG;
 
-        $watchlist = watchlist_manager::get_user_plugins($this->userid);
+        $watchlist = watchlist_manager::get_watchlist($this->userid);
         $maxplugins = (int) get_config('local_plugwatch', 'maxplugins');
 
         $plugins = [];
