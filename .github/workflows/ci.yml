@@ -70,45 +70,45 @@ jobs:
 
       - name: PHP Lint
         if: ${{ !cancelled() && matrix.runchecks == 'all' }}
-        run: moodle-plugin-ci phplint ./plugin
+        run: moodle-plugin-ci phplint
 
       - name: PHP Mess Detector
         continue-on-error: true
         if: ${{ !cancelled() && matrix.runchecks == 'all' }}
-        run: moodle-plugin-ci phpmd ./plugin
+        run: moodle-plugin-ci phpmd
 
       - name: Moodle Code Checker
         if: ${{ !cancelled() && matrix.runchecks == 'all' }}
-        run: moodle-plugin-ci phpcs --max-warnings 0 ./plugin
+        run: moodle-plugin-ci phpcs --max-warnings 0
 
       - name: Moodle PHPDoc Checker
         if: ${{ !cancelled() && matrix.runchecks == 'all' }}
-        run: moodle-plugin-ci phpdoc --max-warnings 0 ./plugin
+        run: moodle-plugin-ci phpdoc --max-warnings 0
 
       - name: Validating
         if: ${{ !cancelled() && matrix.runchecks == 'all' }}
-        run: moodle-plugin-ci validate ./plugin
+        run: moodle-plugin-ci validate
 
       - name: Check upgrade savepoints
         if: ${{ !cancelled() && matrix.runchecks == 'all' }}
-        run: moodle-plugin-ci savepoints ./plugin
+        run: moodle-plugin-ci savepoints
 
       - name: Mustache Lint
         if: ${{ !cancelled() && matrix.runchecks == 'all' }}
-        run: moodle-plugin-ci mustache ./plugin
+        run: moodle-plugin-ci mustache
 
       - name: Grunt tasks
         if: ${{ !cancelled() && matrix.runchecks == 'all' }}
-        run: moodle-plugin-ci grunt --max-lint-warnings 0 ./plugin
+        run: moodle-plugin-ci grunt --max-lint-warnings 0
 
       - name: PHPUnit tests
         if: ${{ !cancelled() }}
-        run: moodle-plugin-ci phpunit --fail-on-warning ./plugin
+        run: moodle-plugin-ci phpunit --fail-on-warning
 
       - name: Behat tests
         id: behat
         if: ${{ !cancelled() }}
-        run: moodle-plugin-ci behat --profile chrome --scss-deprecations ./plugin
+        run: moodle-plugin-ci behat --profile chrome --scss-deprecations
 
       - name: Upload Behat Faildump
         if: ${{ failure() && steps.behat.outcome == 'failure' }}
