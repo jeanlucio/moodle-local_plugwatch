@@ -33,7 +33,7 @@ use curl;
  * @copyright  2026 Jean Lúcio
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+class plugindirectory {
     /** @var string The API endpoint for the full plugin list. */
     private const PLUGLIST_URL = 'https://download.moodle.org/api/1.3/pluglist.php';
 
@@ -58,13 +58,11 @@ use curl;
 
         require_once($CFG->libdir . '/filelib.php');
         $curl = new curl();
-        
         // Use a reasonable timeout (10 seconds) for fetching the ~3MB JSON.
         $options = [
             'CURLOPT_TIMEOUT' => 10,
             'CURLOPT_CONNECTTIMEOUT' => 5,
         ];
-        
         $response = $curl->get(self::PLUGLIST_URL, null, $options);
         $info = $curl->get_info();
 

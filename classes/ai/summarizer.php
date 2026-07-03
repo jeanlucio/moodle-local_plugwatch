@@ -39,7 +39,7 @@ use core\di;
  * @copyright  2026 Jean Lúcio
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+class summarizer {
     /**
      * Generates a short summary of the release notes in the requested language.
      *
@@ -86,7 +86,6 @@ use core\di;
             contextid: \context_system::instance()->id,
             prompttext: $system . "\n\n" . $prompt
         );
-        
         $response = $manager->process_action($action);
         if ($response && $response->get_success() && $response->get_response_data()) {
             $data = $response->get_response_data();

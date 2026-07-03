@@ -34,12 +34,11 @@ use advanced_testcase;
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \local_plugwatch\local\update_checker
  */
-class update_checker_test extends advanced_testcase {
-
+final class update_checker_test extends advanced_testcase {
     /**
      * Test the API version extraction method.
      */
-    public function test_get_latest_version_from_api() {
+    public function test_get_latest_version_from_api(): void {
         $this->resetAfterTest();
 
         // Use reflection to test the private method.
@@ -51,7 +50,7 @@ class update_checker_test extends advanced_testcase {
                 ['timecreated' => 1000, 'release' => '1.0'],
                 ['timecreated' => 3000, 'release' => '3.0'],
                 ['timecreated' => 2000, 'release' => '2.0'],
-            ]
+            ],
         ];
 
         $latest = $method->invoke(null, $apidata);

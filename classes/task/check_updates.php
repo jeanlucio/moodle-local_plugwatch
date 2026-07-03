@@ -35,7 +35,6 @@ use local_plugwatch\local\update_checker;
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class check_updates extends scheduled_task {
-
     /**
      * Get a descriptive name for this task.
      *

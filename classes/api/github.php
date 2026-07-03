@@ -54,14 +54,13 @@ class github {
 
         require_once($CFG->libdir . '/filelib.php');
         $curl = new curl();
-        
         $options = [
             'CURLOPT_TIMEOUT' => 5,
             'CURLOPT_CONNECTTIMEOUT' => 3,
             'CURLOPT_HTTPHEADER' => [
                 'Accept: application/vnd.github.v3+json',
-                'User-Agent: Moodle-local_plugwatch'
-            ]
+                'User-Agent: Moodle-local_plugwatch',
+            ],
         ];
 
         // If admin configured a token, use it to avoid strict rate limits.

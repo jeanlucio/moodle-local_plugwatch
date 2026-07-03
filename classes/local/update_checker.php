@@ -35,7 +35,7 @@ use local_plugwatch\ai\summarizer;
  * @copyright  2026 Jean Lúcio
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+class update_checker {
     /** @var int Daily frequency in seconds. */
     public const FREQ_DAILY = 86400;
 
@@ -200,7 +200,6 @@ use local_plugwatch\ai\summarizer;
 
         // Use standard capability checks just in case (cron executes as CLI).
         $subject = get_string('notification_subject', 'local_plugwatch', $a);
-        
         // Render the mustache template for HTML body.
         $renderer = $PAGE->get_renderer('local_plugwatch');
         // We simulate the template data.
@@ -209,12 +208,13 @@ use local_plugwatch\ai\summarizer;
             'component' => $apidata['component'],
             'release' => $release,
             'summaryhtml' => format_text($summary, FORMAT_HTML),
-            'link' => $link
+            'link' => $link,
         ];
-        
+
         // For simplicity and fallback, we generate a text body too.
         $fullmessage = get_string('notification_body', 'local_plugwatch', $a);
-        
+
+        // We haven't created the mustache template yet, so for Phase 2 we will just
         // We haven't created the mustache template yet, so for Phase 2 we will just
         // use the plain string but wrapped in nl2br for html.
         // Once renderer and template are done, this can be updated.
