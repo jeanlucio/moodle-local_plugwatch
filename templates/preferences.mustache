@@ -1,0 +1,215 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_plugwatch/preferences
+
+    The Plugin Monitor user preferences page. Displays the list of watched plugins,
+    a notification frequency selector, a plugin search field, and an add button.
+    All add/remove actions are handled via AMD AJAX — no page reload required.
+
+    Classes required:
+    * .path-local-plugwatch — scoping class added automatically by Moodle to <body>.
+
+    Data attributes required:
+    * data-region="plugwatch-app" — root element observed by preferences.js.
+    * data-wstoken — Moodle session web service token for AJAX calls.
+    * data-maxplugins — per-user plugin limit (integer).
+    * data-sesskey — Moodle session key for the frequency form POST.
+
+    Example context (json):
+    {
+        "sesskey": "abc123",
+        "wstoken": "def456",
+        "maxplugins": 30,
+        "currentcount": 2,
+        "frequency": "604800",
+        "frequencyoptions": [
+            {"value": "86400",   "label": "Daily",   "selected": false},
+            {"value": "604800",  "label": "Weekly",  "selected": true},
+            {"value": "2592000", "label": "Monthly", "selected": false}
+        ],
+        "hasplugins": true,
+        "plugins": [
+            {
+                "component": "block_xp",
+                "releasename": "v24.12.0",
+                "timelastnotified": 1700000000,
+                "timechecked": 1700100000
+            },
+            {
+                "component": "mod_game",
+                "releasename": "v1.5.2",
+                "timelastnotified": 0,
+                "timechecked": 1700100001
+            }
+        ],
+        "notificationprefsurl": "https://example.com/message/notificationpreferences.php"
+    }
+}}
+<div class="path-local-plugwatch"
+     data-region="plugwatch-app"
+     data-wstoken="{{wstoken}}"
+     data-maxplugins="{{maxplugins}}"
+     data-sesskey="{{sesskey}}">
+
+    {{! Notification frequency form }}
+    <div class="card mb-4">
+        <div class="card-header">
+            {{#str}}frequency, local_plugwatch{{/str}}
+        </div>
+        <div class="card-body">
+            <form method="post" action="" id="plugwatch-frequency-form" class="form-inline">
+                <input type="hidden" name="sesskey" value="{{sesskey}}">
+                <input type="hidden" name="action" value="setfrequency">
+                <div class="form-group me-2">
+                    <label for="plugwatch-frequency-select" class="me-2">
+                        {{#str}}frequency, local_plugwatch{{/str}}
+                    </label>
+                    <select id="plugwatch-frequency-select"
+                            name="frequency"
+                            class="form-select custom-select">
+                        {{#frequencyoptions}}
+                        <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                        {{/frequencyoptions}}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-secondary btn-sm">
+                    {{#str}}savechanges, core{{/str}}
+                </button>
+            </form>
+            <p class="mb-0 mt-2">
+                <a href="{{notificationprefsurl}}">
+                    {{#str}}messagepreferences, core_message{{/str}}
+                </a>
+            </p>
+        </div>
+    </div>
+
+    {{! Plugin search and add }}
+    <div class="card mb-4">
+        <div class="card-header">
+            {{#str}}addplugin, local_plugwatch{{/str}}
+        </div>
+        <div class="card-body">
+            <div class="input-group" role="search" aria-label="{{#str}}pluginsearch, local_plugwatch{{/str}}">
+                <input type="text"
+                       id="plugwatch-search-input"
+                       class="form-control"
+                       placeholder="{{#str}}pluginsearch_placeholder, local_plugwatch{{/str}}"
+                       aria-label="{{#str}}pluginsearch, local_plugwatch{{/str}}"
+                       autocomplete="off"
+                       data-region="plugwatch-search-input">
+                <div class="input-group-append">
+                    <button type="button"
+                            id="plugwatch-add-btn"
+                            class="btn btn-primary"
+                            data-region="plugwatch-add-btn"
+                            disabled>
+                        {{#str}}addplugin, local_plugwatch{{/str}}
+                    </button>
+                </div>
+            </div>
+            {{! Autocomplete results dropdown }}
+            <div id="plugwatch-search-results"
+                 class="list-group mt-1"
+                 data-region="plugwatch-search-results"
+                 role="listbox"
+                 aria-label="{{#str}}searchnoresults, local_plugwatch{{/str}}"
+                 hidden>
+            </div>
+            {{! Inline status message for add/remove actions }}
+            <div id="plugwatch-status"
+                 class="mt-2"
+                 data-region="plugwatch-status"
+                 role="alert"
+                 aria-live="polite">
+            </div>
+        </div>
+    </div>
+
+    {{! Watched plugins table }}
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>{{#str}}watchedplugins, local_plugwatch{{/str}}</span>
+            <span class="badge bg-secondary text-dark"
+                  data-region="plugwatch-count">
+                {{currentcount}} / {{maxplugins}}
+            </span>
+        </div>
+        <div class="card-body p-0">
+            {{#hasplugins}}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="plugwatch-plugins-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">{{#str}}plugin, local_plugwatch{{/str}}</th>
+                            <th scope="col">{{#str}}lastnotified, local_plugwatch{{/str}}</th>
+                            <th scope="col">{{#str}}lastchecked, local_plugwatch{{/str}}</th>
+                            <th scope="col">
+                                <span class="accesshide">{{#str}}removeplugin, local_plugwatch{{/str}}</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody data-region="plugwatch-tbody">
+                        {{#plugins}}
+                        <tr data-component="{{component}}">
+                            <td>
+                                <strong>{{component}}</strong>
+                                {{#releasename}}
+                                <br>
+                                <small class="text-muted">{{releasename}}</small>
+                                {{/releasename}}
+                            </td>
+                            <td>
+                                {{#timelastnotified}}
+                                <span class="text-muted small">{{timelastnotified}}</span>
+                                {{/timelastnotified}}
+                                {{^timelastnotified}}
+                                <span class="text-muted small">&mdash;</span>
+                                {{/timelastnotified}}
+                            </td>
+                            <td>
+                                {{#timechecked}}
+                                <span class="text-muted small">{{timechecked}}</span>
+                                {{/timechecked}}
+                                {{^timechecked}}
+                                <span class="text-muted small">&mdash;</span>
+                                {{/timechecked}}
+                            </td>
+                            <td class="text-end">
+                                <button type="button"
+                                        class="btn btn-outline-danger btn-sm"
+                                        data-action="remove"
+                                        data-component="{{component}}"
+                                        aria-label="{{#str}}removeplugin, local_plugwatch{{/str}} {{component}}">
+                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {{/plugins}}
+                    </tbody>
+                </table>
+            </div>
+            {{/hasplugins}}
+            {{^hasplugins}}
+            <p class="p-3 mb-0 text-muted" data-region="plugwatch-empty">
+                {{#str}}nopluginswatched, local_plugwatch{{/str}}
+            </p>
+            {{/hasplugins}}
+        </div>
+    </div>
+</div>
