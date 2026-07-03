@@ -69,7 +69,7 @@ class preferences_page implements renderable, templatable {
 
         $watchlist = watchlist_manager::get_user_plugins($this->userid);
         $maxplugins = (int) get_config('local_plugwatch', 'maxplugins');
-        
+
         $plugins = [];
         foreach ($watchlist as $item) {
             $plugins[] = [
