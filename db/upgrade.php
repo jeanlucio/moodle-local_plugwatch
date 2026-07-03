@@ -15,18 +15,34 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Plugin version definition.
+ * Upgrade steps for local_plugwatch.
  *
  * @package    local_plugwatch
  * @copyright  2026 Jean Lúcio
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Performs plugin database upgrades.
+ *
+ * @param int $oldversion Previously installed plugin version.
+ * @return bool
+ */
+function xmldb_local_plugwatch_upgrade(int $oldversion): bool {
+    global $DB;
 
-$plugin->component = 'local_plugwatch';
-$plugin->version   = 2026070301;
-$plugin->requires  = 2024100700;
-$plugin->supported = [405, 502];
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = 'v0.1.0-dev';
+    $dbman = $DB->get_manager();
+
+    if ($oldversion < 2026070301) {
+        $table = new xmldb_table('local_plugwatch_state');
+        $field = new xmldb_field('release', XMLDB_TYPE_CHAR, '100', null, null);
+
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $field, 'releasename');
+        }
+
+        upgrade_plugin_savepoint(true, 2026070301, 'local', 'plugwatch');
+    }
+
+    return true;
+}

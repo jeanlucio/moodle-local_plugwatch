@@ -31,13 +31,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # runchecks='all' on PHP 8.2 to avoid moodle-plugin-ci validate crash under PHP 8.3.
-          - {moodle-branch: 'MOODLE_502_STABLE', php: '8.2', database: 'pgsql', runchecks: 'all'}
-          - {moodle-branch: 'MOODLE_502_STABLE', php: '8.3', database: 'pgsql'}
+          - {moodle-branch: 'MOODLE_502_STABLE', php: '8.3', database: 'pgsql', runchecks: 'all'}
           - {moodle-branch: 'MOODLE_502_STABLE', php: '8.4', database: 'mariadb'}
           - {moodle-branch: 'MOODLE_501_STABLE', php: '8.3', database: 'pgsql'}
           - {moodle-branch: 'MOODLE_501_STABLE', php: '8.2', database: 'mariadb'}
           - {moodle-branch: 'MOODLE_500_STABLE', php: '8.2', database: 'pgsql'}
+          - {moodle-branch: 'MOODLE_500_STABLE', php: '8.2', database: 'mariadb'}
           - {moodle-branch: 'MOODLE_405_STABLE', php: '8.2', database: 'pgsql'}
           - {moodle-branch: 'MOODLE_405_STABLE', php: '8.2', database: 'mariadb'}
 
@@ -119,3 +118,7 @@ jobs:
           path: ${{ github.workspace }}/moodledata/behat_dump
           retention-days: 7
           if-no-files-found: ignore
+
+      - name: Mark cancelled jobs as failed
+        if: ${{ cancelled() }}
+        run: exit 1

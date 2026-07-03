@@ -134,7 +134,7 @@ class watchlist_manager {
             'userid'           => $userid,
             'component'        => $component,
             'timelastreleased' => $timelastreleased,
-            'release'          => $release !== '' ? $release : null,
+            'releasename'      => $release !== '' ? $release : null,
             'timelastnotified' => 0,
             'timechecked'      => 0,
             'timemodified'     => $now,
@@ -161,7 +161,7 @@ class watchlist_manager {
      * Returns the user's watch list joined with the current state for each entry.
      *
      * Each element is a plain object with fields: id, userid, component,
-     * timecreated, timelastreleased, release, timelastnotified, timechecked.
+     * timecreated, timelastreleased, releasename, timelastnotified, timechecked.
      * Fields from the state table are null when no state row exists yet.
      *
      * @param int $userid Target user ID.
@@ -171,7 +171,7 @@ class watchlist_manager {
         global $DB;
 
         $sql = "SELECT i.id, i.userid, i.component, i.timecreated,
-                       s.timelastreleased, s.release, s.timelastnotified, s.timechecked
+                       s.timelastreleased, s.releasename, s.timelastnotified, s.timechecked
                   FROM {local_plugwatch_items} i
              LEFT JOIN {local_plugwatch_state} s ON s.userid = i.userid AND s.component = i.component
                  WHERE i.userid = :userid
@@ -210,7 +210,7 @@ class watchlist_manager {
 
         if ($existing) {
             $existing->timelastreleased = $timelastreleased;
-            $existing->release          = $release !== '' ? $release : null;
+            $existing->releasename      = $release !== '' ? $release : null;
             $existing->timechecked      = $now;
             $existing->timemodified     = $now;
             if ($timelastnotified > 0) {
@@ -222,7 +222,7 @@ class watchlist_manager {
                 'userid'           => $userid,
                 'component'        => $component,
                 'timelastreleased' => $timelastreleased,
-                'release'          => $release !== '' ? $release : null,
+                'releasename'      => $release !== '' ? $release : null,
                 'timelastnotified' => $timelastnotified,
                 'timechecked'      => $now,
                 'timemodified'     => $now,

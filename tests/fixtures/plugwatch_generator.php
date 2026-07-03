@@ -79,7 +79,7 @@ class plugwatch_generator {
             'userid'           => $userid,
             'component'        => $component,
             'timelastreleased' => $timelastreleased,
-            'release'          => $release,
+            'releasename'      => $release,
             'timelastnotified' => $timelastnotified,
             'timechecked'      => $now,
             'timemodified'     => $now,

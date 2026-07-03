@@ -68,7 +68,7 @@ final class watchlist_manager_test extends \advanced_testcase {
         $state = $DB->get_record('local_plugwatch_state', ['userid' => $user->id, 'component' => $component]);
         $this->assertNotFalse($state, 'State row must be created on add_plugin.');
         $this->assertSame($baseline, (int) $state->timelastreleased, 'Baseline timelastreleased must be stored.');
-        $this->assertSame($release, $state->release, 'Baseline release must be stored.');
+        $this->assertSame($release, $state->releasename, 'Baseline release must be stored.');
         $this->assertSame(0, (int) $state->timelastnotified, 'timelastnotified must be 0 (silent baseline).');
     }
 
@@ -166,7 +166,7 @@ final class watchlist_manager_test extends \advanced_testcase {
         $this->assertSame('block_xp', $list[0]->component);
         $this->assertSame('mod_game', $list[1]->component);
         $this->assertSame(1700000000, (int) $list[0]->timelastreleased);
-        $this->assertSame('v2.5.1', $list[0]->release);
+        $this->assertSame('v2.5.1', $list[0]->releasename);
     }
 
     /**
@@ -211,7 +211,7 @@ final class watchlist_manager_test extends \advanced_testcase {
 
         $state = $DB->get_record('local_plugwatch_state', ['userid' => $user->id, 'component' => $component]);
         $this->assertSame(1700000999, (int) $state->timelastreleased);
-        $this->assertSame('v2.6.0', $state->release);
+        $this->assertSame('v2.6.0', $state->releasename);
         $this->assertSame($now, (int) $state->timelastnotified);
     }
 

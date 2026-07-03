@@ -84,6 +84,7 @@ class summarizer {
         $manager = di::get(\core_ai\manager::class);
         $action = new generate_text(
             contextid: \context_system::instance()->id,
+            userid: $userid,
             prompttext: $system . "\n\n" . $prompt
         );
         $response = $manager->process_action($action);

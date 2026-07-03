@@ -70,7 +70,7 @@ class update_checker {
         // Join items, state and user to iterate.
         $sql = "SELECT i.id as itemid, i.userid, i.component,
                        s.timelastreleased as saved_timelastreleased,
-                       s.release as saved_release,
+                       s.releasename AS saved_release,
                        s.timelastnotified,
                        u.lang
                   FROM {local_plugwatch_items} i
