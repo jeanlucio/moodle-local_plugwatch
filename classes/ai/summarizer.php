@@ -40,6 +40,9 @@ use core\di;
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class summarizer {
+    /** @var int Maximum accepted length, in characters, for an AI-generated summary. */
+    private const MAX_SUMMARY_LENGTH = 2000;
+
     /**
      * Generates a short summary of the release notes in the requested language.
      *
@@ -65,37 +68,76 @@ class summarizer {
         $prompt = "Plugin: {$pluginname}\nVersion: {$version}\n\nRelease notes:\n" . substr($releasenotes, 0, 4000);
 
         // 1. Try local_aihub first.
+        // Caught broadly: a provider outage (network, quota, misconfiguration) must fall
+        // through to the next provider in the chain, never break the whole update check.
         if (class_exists('\local_aihub\ai')) {
-            $result = \local_aihub\ai::generate_text(
-                $system,
-                $prompt,
-                false,
-                'local_plugwatch',
-                "Summary for {$pluginname} {$version}",
-                $userid
-            );
-            if (!empty($result['success']) && !empty($result['data'])) {
-                return $result['data'];
+            try {
+                $result = \local_aihub\ai::generate_text(
+                    $system,
+                    $prompt,
+                    false,
+                    'local_plugwatch',
+                    "Summary for {$pluginname} {$version}",
+                    $userid
+                );
+                if (!empty($result['success']) && !empty($result['data'])) {
+                    $summary = self::sanitize_summary((string) $result['data']);
+                    if ($summary !== '') {
+                        return $summary;
+                    }
+                }
+            } catch (\Throwable $e) {
+                debugging('local_plugwatch: local_aihub summary generation failed: ' . $e->getMessage(), DEBUG_NORMAL);
             }
         }
 
         // 2. Try core_ai subsystem.
         // Requires Moodle 4.5+ (ensured by version.php).
-        $manager = di::get(\core_ai\manager::class);
-        $action = new generate_text(
-            contextid: \context_system::instance()->id,
-            userid: $userid,
-            prompttext: $system . "\n\n" . $prompt
-        );
-        $response = $manager->process_action($action);
-        if ($response && $response->get_success() && $response->get_response_data()) {
-            $data = $response->get_response_data();
-            if (!empty($data['generatedcontent'])) {
-                return $data['generatedcontent'];
+        try {
+            $manager = di::get(\core_ai\manager::class);
+            $action = new generate_text(
+                contextid: \context_system::instance()->id,
+                userid: $userid,
+                prompttext: $system . "\n\n" . $prompt
+            );
+            $response = $manager->process_action($action);
+            if ($response && $response->get_success() && $response->get_response_data()) {
+                $data = $response->get_response_data();
+                if (!empty($data['generatedcontent'])) {
+                    $summary = self::sanitize_summary((string) $data['generatedcontent']);
+                    if ($summary !== '') {
+                        return $summary;
+                    }
+                }
             }
+        } catch (\Throwable $e) {
+            debugging('local_plugwatch: core_ai summary generation failed: ' . $e->getMessage(), DEBUG_NORMAL);
         }
 
         // 3. Fallback (no AI available).
         return get_string('noaisummary', 'local_plugwatch');
+    }
+
+    /**
+     * Validates and normalises an AI-generated summary before it is used.
+     *
+     * AI output is untrusted input: it must never be assumed non-empty or
+     * bounded in size. Truncates overly long responses instead of discarding
+     * them outright, since a truncated summary is still useful to the reader.
+     *
+     * @param string $text Raw text returned by an AI provider.
+     * @return string The trimmed, length-capped summary, or '' if it was empty.
+     */
+    private static function sanitize_summary(string $text): string {
+        $text = trim($text);
+        if ($text === '') {
+            return '';
+        }
+
+        if (\core_text::strlen($text) > self::MAX_SUMMARY_LENGTH) {
+            $text = \core_text::substr($text, 0, self::MAX_SUMMARY_LENGTH) . '…';
+        }
+
+        return $text;
     }
 }
