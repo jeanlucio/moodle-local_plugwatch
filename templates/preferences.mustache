@@ -55,6 +55,7 @@
                 "timechecked": 1700100001
             }
         ],
+        "notifynewplugins": false,
         "notificationprefsurl": "https://example.com/message/notificationpreferences.php"
     }
 }}
@@ -83,6 +84,17 @@
                         <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
                         {{/frequencyoptions}}
                     </select>
+                </div>
+                <div class="form-check mb-2">
+                    <input type="checkbox"
+                           class="form-check-input"
+                           id="plugwatch-notifynewplugins"
+                           name="notifynewplugins"
+                           value="1"
+                           {{#notifynewplugins}}checked{{/notifynewplugins}}>
+                    <label class="form-check-label" for="plugwatch-notifynewplugins">
+                        {{#str}}notifynewplugins, local_plugwatch{{/str}}
+                    </label>
                 </div>
                 <button type="submit" class="btn btn-secondary btn-sm">
                     {{#str}}savechanges, core{{/str}}

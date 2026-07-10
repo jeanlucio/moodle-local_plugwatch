@@ -42,7 +42,10 @@ use core_privacy\local\request\writer;
  *
  * All personal data lives at CONTEXT_SYSTEM: the user's plugin watch list
  * (local_plugwatch_items), the per-plugin notification state
- * (local_plugwatch_state), and the local_plugwatch_frequency user preference.
+ * (local_plugwatch_state), and the local_plugwatch_frequency,
+ * local_plugwatch_notifynewplugins and local_plugwatch_lastdigest user
+ * preferences. local_plugwatch_newplugins is a global log with no personal
+ * data (no userid column) and is therefore not covered by this provider.
  *
  * @package    local_plugwatch
  * @copyright  2026 Jean Lúcio
@@ -86,6 +89,16 @@ class provider implements
         $collection->add_user_preference(
             'local_plugwatch_frequency',
             'privacy:metadata:preference:local_plugwatch_frequency'
+        );
+
+        $collection->add_user_preference(
+            'local_plugwatch_notifynewplugins',
+            'privacy:metadata:preference:local_plugwatch_notifynewplugins'
+        );
+
+        $collection->add_user_preference(
+            'local_plugwatch_lastdigest',
+            'privacy:metadata:preference:local_plugwatch_lastdigest'
         );
 
         $collection->add_external_location_link(
@@ -283,6 +296,26 @@ class provider implements
                 'local_plugwatch_frequency',
                 $frequency,
                 get_string('privacy:metadata:preference:local_plugwatch_frequency', 'local_plugwatch')
+            );
+        }
+
+        $notifynewplugins = get_user_preferences('local_plugwatch_notifynewplugins', null, $userid);
+        if ($notifynewplugins !== null) {
+            writer::export_user_preference(
+                'local_plugwatch',
+                'local_plugwatch_notifynewplugins',
+                $notifynewplugins,
+                get_string('privacy:metadata:preference:local_plugwatch_notifynewplugins', 'local_plugwatch')
+            );
+        }
+
+        $lastdigest = get_user_preferences('local_plugwatch_lastdigest', null, $userid);
+        if ($lastdigest !== null) {
+            writer::export_user_preference(
+                'local_plugwatch',
+                'local_plugwatch_lastdigest',
+                transform::datetime((int) $lastdigest),
+                get_string('privacy:metadata:preference:local_plugwatch_lastdigest', 'local_plugwatch')
             );
         }
     }

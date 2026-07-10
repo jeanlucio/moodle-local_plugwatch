@@ -25,6 +25,7 @@
 namespace local_plugwatch\task;
 
 use core\task\scheduled_task;
+use local_plugwatch\local\new_plugin_scanner;
 use local_plugwatch\local\update_checker;
 
 /**
@@ -47,9 +48,15 @@ class check_updates extends scheduled_task {
     /**
      * Execute the task.
      *
+     * Runs the personal watchlist check and the new-plugins digest scan in the
+     * same execution: both call plugindirectory::get_pluglist() internally,
+     * which is memoised for the duration of the request, so this does not
+     * trigger a second HTTP call to the Plugin Directory API.
+     *
      * @return void
      */
     public function execute(): void {
         update_checker::execute();
+        new_plugin_scanner::execute();
     }
 }

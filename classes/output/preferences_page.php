@@ -103,6 +103,7 @@ class preferences_page implements renderable, templatable {
             'frequencyoptions' => $frequencyoptions,
             'hasplugins' => !empty($plugins),
             'plugins' => $plugins,
+            'notifynewplugins' => (bool) get_user_preferences('local_plugwatch_notifynewplugins', false, $this->userid),
             'notificationprefsurl' => new \moodle_url('/message/notificationpreferences.php'),
         ];
     }

@@ -35,12 +35,26 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title(get_string('preferences_heading', 'local_plugwatch'));
 $PAGE->set_heading(get_string('preferences_heading', 'local_plugwatch'));
 
-// Handle form submission for frequency change.
+// Handle form submission for frequency and new-plugins digest opt-in.
 if ($action = optional_param('action', '', PARAM_ALPHANUM)) {
     require_sesskey();
     if ($action === 'setfrequency') {
         $frequency = required_param('frequency', PARAM_INT);
         set_user_preference('local_plugwatch_frequency', $frequency, $USER);
+
+        $notifynewplugins = optional_param('notifynewplugins', 0, PARAM_BOOL);
+        $wasenabled = (bool) get_user_preferences('local_plugwatch_notifynewplugins', false, $USER);
+        if ($notifynewplugins) {
+            if (!$wasenabled) {
+                // Silent baseline: opting in now must not flood the user with
+                // every plugin published in the directory since forever.
+                set_user_preference('local_plugwatch_lastdigest', time(), $USER);
+            }
+            set_user_preference('local_plugwatch_notifynewplugins', 1, $USER);
+        } else {
+            unset_user_preference('local_plugwatch_notifynewplugins', $USER);
+        }
+
         redirect($url, get_string('changessaved', 'core'), null, \core\output\notification::NOTIFY_SUCCESS);
     }
 }
