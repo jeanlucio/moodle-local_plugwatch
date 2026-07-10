@@ -6,7 +6,6 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import $ from 'jquery';
 import Ajax from 'core/ajax';
 import Notification from 'core/notification';
 import {getString} from 'core/str';
@@ -19,33 +18,36 @@ import {init as initPluginSearch} from 'local_plugwatch/plugin_search';
  * @param {String} rootSelector The root element selector
  */
 export const init = (rootSelector) => {
-    const root = $(rootSelector);
-    if (!root.length) {
+    const root = document.querySelector(rootSelector);
+    if (!root) {
         return;
     }
 
-    const maxPlugins = parseInt(root.data('maxplugins'), 10);
-    const tbody = root.find('[data-region="plugwatch-tbody"]');
-    const statusDiv = root.find('[data-region="plugwatch-status"]');
-    const countBadge = root.find('[data-region="plugwatch-count"]');
+    const maxPlugins = parseInt(root.dataset.maxplugins, 10);
+    const tbody = root.querySelector('[data-region="plugwatch-tbody"]');
+    const statusDiv = root.querySelector('[data-region="plugwatch-status"]');
+    const countBadge = root.querySelector('[data-region="plugwatch-count"]');
 
     const updateCount = () => {
-        const currentCount = tbody.find('tr').length;
+        const currentCount = tbody.querySelectorAll('tr').length;
         getString('watchedplugins_count', 'local_plugwatch', {
             current: currentCount,
             max: maxPlugins
         }).then((str) => {
-            countBadge.text(str);
+            countBadge.textContent = str;
             return str;
         }).catch(Notification.exception);
     };
 
     const setStatus = (message, isError = false) => {
-        statusDiv.removeClass('alert alert-success alert-danger').empty();
+        statusDiv.classList.remove('alert', 'alert-success', 'alert-danger');
+        statusDiv.textContent = '';
         if (message) {
-            statusDiv.addClass('alert ' + (isError ? 'alert-danger' : 'alert-success')).text(message);
+            statusDiv.classList.add('alert', isError ? 'alert-danger' : 'alert-success');
+            statusDiv.textContent = message;
             setTimeout(() => {
-                statusDiv.removeClass('alert alert-success alert-danger').empty();
+                statusDiv.classList.remove('alert', 'alert-success', 'alert-danger');
+                statusDiv.textContent = '';
             }, 5000);
         }
     };
@@ -71,11 +73,20 @@ export const init = (rootSelector) => {
           .always(() => pendingPromise.resolve());
     });
 
-    // Handle remove buttons
-    tbody.on('click', '[data-action="remove"]', function(e) {
+    // Handle remove buttons (event delegation, since rows are added/removed dynamically).
+    // tbody does not exist when the watch list is empty (the template renders the
+    // empty-state message instead), so there is nothing to delegate from in that case.
+    if (!tbody) {
+        return;
+    }
+
+    tbody.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action="remove"]');
+        if (!btn) {
+            return;
+        }
         e.preventDefault();
-        const btn = $(this);
-        const component = btn.data('component');
+        const component = btn.dataset.component;
 
         const pendingPromise = new Pending('local_plugwatch/remove_plugin');
 
@@ -90,13 +101,13 @@ export const init = (rootSelector) => {
                 // or the string-fetching below: both are async, and the reload would
                 // otherwise tear down the page mid-flight, leaving their promises to
                 // resolve into a torn-down context (a stray console error, no visible effect).
-                if (tbody.find('tr').length === 0) {
+                if (tbody.querySelectorAll('tr').length === 0) {
                     window.location.reload();
                 } else {
                     updateCount();
                     // eslint-disable-next-line promise/no-nesting
                     getString('plugin', 'local_plugwatch').then((pluginStr) => {
-                        setStatus(pluginStr + ' ' + component + ' removed.');
+                        setStatus(`${pluginStr} ${component} removed.`);
                         return pluginStr;
                     }).catch(Notification.exception);
                 }
