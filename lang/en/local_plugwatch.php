@@ -26,8 +26,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['addplugin'] = 'Add plugin';
-$string['capability_use'] = 'Use Plugin Monitor';
-$string['capability_use_help'] = 'Allows the user to manage a personal list of Moodle plugins to monitor and receive update notifications in their own language.';
 $string['errorlimitreached'] = 'You have reached the maximum of {$a} watched plugins.';
 $string['errorpluginnotfound'] = 'Plugin not found in the Plugin Directory.';
 $string['frequency'] = 'Notification frequency';
@@ -49,6 +47,8 @@ $string['plugin'] = 'Plugin';
 $string['pluginname'] = 'Plugin Monitor';
 $string['pluginsearch'] = 'Search plugins';
 $string['pluginsearch_placeholder'] = 'Plugin name or component (e.g. block_xp)';
+$string['plugwatch:use'] = 'Use Plugin Monitor';
+$string['plugwatch:use_help'] = 'Allows the user to manage a personal list of Moodle plugins to monitor and receive update notifications in their own language.';
 $string['preferences_heading'] = 'Plugin Monitor — Preferences';
 $string['privacy:metadata:ai_provider'] = 'Plugin release notes are sent to the configured AI provider (local_aihub or core_ai) to generate a summary. No personal user data is transmitted.';
 $string['privacy:metadata:ai_provider:releasenotes'] = 'The raw release notes text sent to the AI provider to be summarised.';

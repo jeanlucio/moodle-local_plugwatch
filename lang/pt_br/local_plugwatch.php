@@ -26,8 +26,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['addplugin'] = 'Adicionar plugin';
-$string['capability_use'] = 'Usar Monitor de Plugins';
-$string['capability_use_help'] = 'Permite ao usuário gerenciar uma lista pessoal de plugins Moodle para monitorar e receber notificações de atualização em seu próprio idioma.';
 $string['errorlimitreached'] = 'Você atingiu o limite máximo de {$a} plugins vigiados.';
 $string['errorpluginnotfound'] = 'Plugin não encontrado no Diretório de Plugins.';
 $string['frequency'] = 'Frequência de notificação';
@@ -49,6 +47,8 @@ $string['plugin'] = 'Plugin';
 $string['pluginname'] = 'Monitor de Plugins';
 $string['pluginsearch'] = 'Buscar plugins';
 $string['pluginsearch_placeholder'] = 'Nome ou componente do plugin (ex: block_xp)';
+$string['plugwatch:use'] = 'Usar Monitor de Plugins';
+$string['plugwatch:use_help'] = 'Permite ao usuário gerenciar uma lista pessoal de plugins Moodle para monitorar e receber notificações de atualização em seu próprio idioma.';
 $string['preferences_heading'] = 'Monitor de Plugins — Preferências';
 $string['privacy:metadata:ai_provider'] = 'As notas de versão do plugin são enviadas ao provedor de IA configurado (local_aihub ou core_ai) para gerar um resumo. Nenhum dado pessoal do usuário é transmitido.';
 $string['privacy:metadata:ai_provider:releasenotes'] = 'O texto bruto das notas de versão enviado ao provedor de IA para ser resumido.';
