@@ -9,6 +9,7 @@
 import $ from 'jquery';
 import Ajax from 'core/ajax';
 import Notification from 'core/notification';
+import {getString} from 'core/str';
 
 /**
  * Initialize the plugin search autocomplete.
@@ -31,6 +32,11 @@ export const init = (root, onAddCallback) => {
     const renderResults = (results) => {
         clearResults();
         if (!results || results.length === 0) {
+            getString('searchnoresults', 'local_plugwatch').then((str) => {
+                const empty = $('<div class="list-group-item text-muted"></div>').text(str);
+                resultsContainer.append(empty).prop('hidden', false);
+                return str;
+            }).catch(Notification.exception);
             return;
         }
 

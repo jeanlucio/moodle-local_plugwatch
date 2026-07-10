@@ -9,9 +9,9 @@
 import $ from 'jquery';
 import Ajax from 'core/ajax';
 import Notification from 'core/notification';
-import Str from 'core/str';
+import {getString} from 'core/str';
 import Pending from 'core/pending';
-import PluginSearch from 'local_plugwatch/plugin_search';
+import {init as initPluginSearch} from 'local_plugwatch/plugin_search';
 
 /**
  * Initialize the preferences UI.
@@ -31,7 +31,7 @@ export const init = (rootSelector) => {
 
     const updateCount = () => {
         const currentCount = tbody.find('tr').length;
-        Str.get_string('watchedplugins_count', 'local_plugwatch', {
+        getString('watchedplugins_count', 'local_plugwatch', {
             current: currentCount,
             max: maxPlugins
         }).then((str) => {
@@ -51,7 +51,7 @@ export const init = (rootSelector) => {
     };
 
     // Initialize the search module.
-    PluginSearch.init(root, (selectedPlugin) => {
+    initPluginSearch(root, (selectedPlugin) => {
         // Callback when a plugin is selected and Add is clicked.
         const pendingPromise = new Pending('local_plugwatch/add_plugin');
 
@@ -85,14 +85,17 @@ export const init = (rootSelector) => {
         }])[0].then((result) => {
             if (result.success) {
                 btn.closest('tr').remove();
-                updateCount();
 
-                // If empty, reload to show empty state
+                // If empty, reload to show empty state. Do this before updateCount()
+                // or the string-fetching below: both are async, and the reload would
+                // otherwise tear down the page mid-flight, leaving their promises to
+                // resolve into a torn-down context (a stray console error, no visible effect).
                 if (tbody.find('tr').length === 0) {
                     window.location.reload();
                 } else {
+                    updateCount();
                     // eslint-disable-next-line promise/no-nesting
-                    Str.get_string('plugin', 'local_plugwatch').then((pluginStr) => {
+                    getString('plugin', 'local_plugwatch').then((pluginStr) => {
                         setStatus(pluginStr + ' ' + component + ' removed.');
                         return pluginStr;
                     }).catch(Notification.exception);

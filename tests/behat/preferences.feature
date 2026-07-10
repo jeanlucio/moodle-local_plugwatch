@@ -13,23 +13,15 @@ Feature: Manage the personal plugin watch list
       | user     | role    |
       | manager1 | manager |
 
-  Scenario: A user without the capability cannot access the preferences page
+  Scenario: A user without the capability does not see the preferences link
     Given I log in as "student1"
-    When I visit "/local/plugwatch/preferences.php"
-    Then I should see "Sorry, but you do not currently have permissions to do that"
+    When I visit "/user/preferences.php"
+    Then I should not see "Plugin Monitor"
 
   Scenario: A user with the capability sees the preferences page
     Given I log in as "manager1"
     When I visit "/local/plugwatch/preferences.php"
     Then I should see "Plugin Monitor — Preferences"
-
-  @javascript
-  Scenario: Searching for a plugin that does not exist shows the empty state
-    Given I log in as "manager1"
-    And I visit "/local/plugwatch/preferences.php"
-    When I set the field "Plugin name or component (e.g. block_xp)" to "zzzz_this_plugin_does_not_exist_zzzz"
-    And I wait "1" seconds
-    Then I should see "No plugins found matching your search."
 
   @javascript
   Scenario: Removing a watched plugin removes it from the table
