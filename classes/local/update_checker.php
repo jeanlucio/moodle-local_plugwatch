@@ -48,6 +48,12 @@ class update_checker {
     /**
      * Executes the update check process for all users.
      *
+     * Runs in two passes to avoid issuing a $DB call per watched item: the
+     * first pass reads the recordset once and buckets each row into either
+     * "no update, just touch timechecked" or "candidate for notification".
+     * The second pass bulk-loads the users that need notifying and only then
+     * performs the (necessarily per-user) message send and state update.
+     *
      * @return void
      */
     public static function execute(): void {
@@ -64,11 +70,9 @@ class update_checker {
             return;
         }
 
-        // Cache for GitHub release notes so we don't fetch the same repo multiple times.
-        $notescache = [];
-
         // Join items, state and user to iterate.
         $sql = "SELECT i.id as itemid, i.userid, i.component,
+                       s.id as stateid,
                        s.timelastreleased as saved_timelastreleased,
                        s.releasename AS saved_release,
                        s.timelastnotified,
@@ -80,6 +84,9 @@ class update_checker {
 
         $rs = $DB->get_recordset_sql($sql);
 
+        $touchstateids = [];
+        $tonotify = [];
+
         foreach ($rs as $record) {
             $component = $record->component;
             if (!isset($pluglist[$component])) {
@@ -90,27 +97,71 @@ class update_checker {
             $apitimelast = (int) $apidata['timelastreleased'];
 
             if ($apitimelast <= (int) $record->saved_timelastreleased) {
-                // No update. Just touch timechecked.
-                watchlist_manager::update_state(
-                    (int) $record->userid,
-                    $component,
-                    (int) $record->saved_timelastreleased,
-                    (string) $record->saved_release,
-                    (int) $record->timelastnotified
-                );
+                // No update. Just touch timechecked in bulk once the recordset is done.
+                $touchstateids[] = (int) $record->stateid;
                 continue;
             }
 
             // Update detected. Check frequency preference.
             $freq = (int) get_user_preferences('local_plugwatch_frequency', self::FREQ_WEEKLY, $record->userid);
-            $now = time();
-            if (($now - (int) $record->timelastnotified) < $freq) {
+            if ((time() - (int) $record->timelastnotified) < $freq) {
                 // Too soon to notify again. Wait for the next cycle.
                 // We don't update state yet, so we keep detecting it until it's time to notify.
                 continue;
             }
 
-            // Time to notify. Get latest release from the plugin directory API.
+            $tonotify[] = [
+                'userid'      => (int) $record->userid,
+                'component'   => $component,
+                'lang'        => !empty($record->lang) ? $record->lang : 'en',
+                'apidata'     => $apidata,
+                'apitimelast' => $apitimelast,
+            ];
+        }
+
+        $rs->close();
+
+        if (!empty($touchstateids)) {
+            [$insql, $inparams] = $DB->get_in_or_equal($touchstateids, SQL_PARAMS_NAMED);
+            $now = time();
+            $DB->set_field_select('local_plugwatch_state', 'timechecked', $now, "id {$insql}", $inparams);
+            $DB->set_field_select('local_plugwatch_state', 'timemodified', $now, "id {$insql}", $inparams);
+        }
+
+        self::notify_all($tonotify);
+    }
+
+    /**
+     * Sends notifications for every candidate collected during execute(), and
+     * updates their state records afterwards.
+     *
+     * Bulk-loads all the involved users in a single query so that
+     * send_notification() never has to look a user up itself.
+     *
+     * @param array $tonotify List of candidate rows, each with keys
+     *                         userid, component, lang, apidata, apitimelast.
+     * @return void
+     */
+    private static function notify_all(array $tonotify): void {
+        global $DB;
+
+        if (empty($tonotify)) {
+            return;
+        }
+
+        $userids = array_values(array_unique(array_column($tonotify, 'userid')));
+        $users = $DB->get_records_list('user', 'id', $userids);
+
+        // Cache for GitHub release notes so we don't fetch the same repo multiple times.
+        $notescache = [];
+
+        foreach ($tonotify as $candidate) {
+            $user = $users[$candidate['userid']] ?? null;
+            if (!$user) {
+                continue;
+            }
+
+            $apidata = $candidate['apidata'];
             $latestversion = self::get_latest_version_from_api($apidata);
             $release = $latestversion['release'] ?? 'Unknown';
 
@@ -125,29 +176,24 @@ class update_checker {
             }
 
             // Summarize via AI.
-            $lang = !empty($record->lang) ? $record->lang : 'en';
             $summary = summarizer::summarize_release_notes(
-                $apidata['name'] ?? $component,
+                $apidata['name'] ?? $candidate['component'],
                 $release,
                 $notes,
-                $lang,
-                (int) $record->userid
+                $candidate['lang'],
+                $candidate['userid']
             );
 
-            // Send notification.
-            self::send_notification((int) $record->userid, $apidata, $release, $summary);
+            self::send_notification($user, $apidata, $release, $summary);
 
-            // Update state.
             watchlist_manager::update_state(
-                (int) $record->userid,
-                $component,
-                $apitimelast,
+                $candidate['userid'],
+                $candidate['component'],
+                $candidate['apitimelast'],
                 $release,
-                $now
+                time()
             );
         }
-
-        $rs->close();
     }
 
     /**
@@ -174,19 +220,14 @@ class update_checker {
     /**
      * Sends the notification via Message API.
      *
-     * @param int $userid
-     * @param array $apidata
-     * @param string $release
-     * @param string $summary
+     * @param \stdClass $user The already-loaded recipient user record.
+     * @param array $apidata Plugin data array from the Plugin Directory API.
+     * @param string $release Human-readable release string.
+     * @param string $summary AI-generated (or fallback) summary text.
      * @return void
      */
-    private static function send_notification(int $userid, array $apidata, string $release, string $summary): void {
-        global $DB, $PAGE;
-
-        $user = $DB->get_record('user', ['id' => $userid]);
-        if (!$user) {
-            return;
-        }
+    private static function send_notification(\stdClass $user, array $apidata, string $release, string $summary): void {
+        global $OUTPUT;
 
         $pluginname = $apidata['name'] ?? $apidata['component'];
         $link = 'https://moodle.org/plugins/' . $apidata['component'];
@@ -198,12 +239,8 @@ class update_checker {
         $a->summary = $summary;
         $a->link = $link;
 
-        // Use standard capability checks just in case (cron executes as CLI).
         $subject = get_string('notification_subject', 'local_plugwatch', $a);
-        // Render the mustache template for HTML body.
-        global $OUTPUT;
 
-        // We simulate the template data.
         $templatedata = [
             'name' => $pluginname,
             'component' => $apidata['component'],

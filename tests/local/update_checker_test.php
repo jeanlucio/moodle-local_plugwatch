@@ -276,4 +276,81 @@ final class update_checker_test extends advanced_testcase {
 
         $this->assertCount(0, $messages, 'No processing must occur when the plugin is disabled.');
     }
+
+    /**
+     * The "no update" path must bulk-update timechecked, not issue one write per item.
+     *
+     * Guards against the N+1 antipattern: with 20 watched items all reporting no
+     * update, the number of DB writes must stay flat (bulk set_field_select calls),
+     * not grow linearly with the number of items.
+     *
+     * @covers ::execute
+     */
+    public function test_no_update_across_many_items_uses_bulk_write(): void {
+        global $DB;
+
+        $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('local/plugwatch:use', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        role_assign($roleid, $user->id, \context_system::instance()->id);
+
+        $baseline = 1700000000;
+        $apidata = [];
+        for ($i = 0; $i < 20; $i++) {
+            $component = "block_fake{$i}";
+            plugwatch_generator::create_watch_item($user->id, $component, $baseline, 'v1.0.0');
+            $apidata[$component] = $this->make_api_entry($component, $baseline, 'v1.0.0');
+        }
+        $this->inject_pluglist($apidata);
+
+        $writesbefore = $DB->perf_get_writes();
+        update_checker::execute();
+        $writesdelta = $DB->perf_get_writes() - $writesbefore;
+
+        $this->assertLessThan(
+            20,
+            $writesdelta,
+            'Touching timechecked for 20 items must not issue 20+ writes (N+1 antipattern).'
+        );
+
+        $state = $DB->get_record('local_plugwatch_state', ['userid' => $user->id, 'component' => 'block_fake0']);
+        $this->assertGreaterThan(0, (int) $state->timechecked, 'timechecked must still be updated for every item.');
+    }
+
+    /**
+     * Notifying several users in the same run must notify every one of them correctly.
+     *
+     * The users are bulk-loaded via a single get_records_list() call rather than one
+     * get_record() per notification, but that specific saving is not asserted here via
+     * a query count: message_send() itself performs a variable, version-dependent
+     * number of reads per recipient (message processors, preferences, etc.), which
+     * would dwarf and mask the single query this test would otherwise be checking for.
+     * The bulk-write regression guard lives in
+     * test_no_update_across_many_items_uses_bulk_write(), where there is no
+     * message_send() noise to contend with.
+     *
+     * @covers ::execute
+     */
+    public function test_multiple_notifications_notifies_every_user(): void {
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('local/plugwatch:use', CAP_ALLOW, $roleid, \context_system::instance()->id);
+
+        $component = 'block_xp';
+        $baseline = 1700000000;
+        $newrelease = 1700000999;
+        for ($i = 0; $i < 5; $i++) {
+            $user = $this->getDataGenerator()->create_user();
+            role_assign($roleid, $user->id, \context_system::instance()->id);
+            plugwatch_generator::create_watch_item($user->id, $component, $baseline, 'v2.5.1');
+        }
+
+        $this->inject_pluglist([$component => $this->make_api_entry($component, $newrelease, 'v2.6.0')]);
+
+        $sink = $this->redirectMessages();
+        update_checker::execute();
+        $messages = $sink->get_messages();
+        $sink->close();
+
+        $this->assertCount(5, $messages, 'All five users must be notified.');
+    }
 }
