@@ -26,14 +26,12 @@
 
     Data attributes required:
     * data-region="plugwatch-app" — root element observed by preferences.js.
-    * data-wstoken — Moodle session web service token for AJAX calls.
     * data-maxplugins — per-user plugin limit (integer).
     * data-sesskey — Moodle session key for the frequency form POST.
 
     Example context (json):
     {
         "sesskey": "abc123",
-        "wstoken": "def456",
         "maxplugins": 30,
         "currentcount": 2,
         "frequency": "604800",
@@ -62,7 +60,6 @@
 }}
 <div class="path-local-plugwatch"
      data-region="plugwatch-app"
-     data-wstoken="{{wstoken}}"
      data-maxplugins="{{maxplugins}}"
      data-sesskey="{{sesskey}}">
 
@@ -128,7 +125,7 @@
                  class="list-group mt-1"
                  data-region="plugwatch-search-results"
                  role="listbox"
-                 aria-label="{{#str}}searchnoresults, local_plugwatch{{/str}}"
+                 aria-label="{{#str}}searchresults, local_plugwatch{{/str}}"
                  hidden>
             </div>
             {{! Inline status message for add/remove actions }}

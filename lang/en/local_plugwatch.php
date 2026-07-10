@@ -69,6 +69,7 @@ $string['privacy:metadata:preference:local_plugwatch_frequency'] = 'The notifica
 $string['releasenotes'] = 'Release notes';
 $string['removeplugin'] = 'Remove';
 $string['searchnoresults'] = 'No plugins found matching your search.';
+$string['searchresults'] = 'Search results';
 $string['settings_enabled'] = 'Enable Plugin Watch';
 $string['settings_enabled_help'] = 'When disabled, no checks are performed and no notifications are sent.';
 $string['task_check_updates'] = 'Check plugin updates';

@@ -24,9 +24,9 @@
 
 namespace local_plugwatch\local;
 
-use local_plugwatch\api\plugindirectory;
-use local_plugwatch\api\github;
 use local_plugwatch\ai\summarizer;
+use local_plugwatch\api\github;
+use local_plugwatch\api\plugindirectory;
 
 /**
  * Executes the core business logic of checking updates and notifying users.

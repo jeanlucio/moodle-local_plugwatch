@@ -69,6 +69,7 @@ $string['privacy:metadata:preference:local_plugwatch_frequency'] = 'A frequênci
 $string['releasenotes'] = 'Notas de versão';
 $string['removeplugin'] = 'Remover';
 $string['searchnoresults'] = 'Nenhum plugin encontrado para a busca informada.';
+$string['searchresults'] = 'Resultados da busca';
 $string['settings_enabled'] = 'Habilitar Vigia de Plugins';
 $string['settings_enabled_help'] = 'Quando desabilitado, nenhuma verificação é realizada e nenhuma notificação é enviada.';
 $string['task_check_updates'] = 'Verificar atualizações de plugins';

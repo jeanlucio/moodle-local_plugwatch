@@ -24,8 +24,8 @@
 
 namespace local_plugwatch\ai;
 
-use core_ai\aiactions\generate_text;
 use core\di;
+use core_ai\aiactions\generate_text;
 
 /**
  * Facade that chains AI providers to summarize plugin release notes.

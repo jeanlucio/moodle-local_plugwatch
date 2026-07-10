@@ -97,7 +97,6 @@ class preferences_page implements renderable, templatable {
 
         return [
             'sesskey' => sesskey(),
-            'wstoken' => '', // Actually, WS are session-based with Ajax.call(), no wstoken needed in DOM here.
             'maxplugins' => $maxplugins,
             'currentcount' => count($plugins),
             'frequency' => $this->frequency,
